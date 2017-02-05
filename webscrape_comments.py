@@ -4,32 +4,32 @@ import scipy.stats as sp
 import matplotlib.pyplot as plt
 import re
 from bs4 import BeautifulSoup
-import requests # <div class="main clearfix pl3 ml3">
+import requests 
 import time
 import datetime
+
+'''
+The following code trawls through Kickstarter projects and scrapes their comments.
+A comment dataframe is pickled, as well as another with general information.
+Comment pages have a "Show Older Comments" button for projects with many comments,
+requiring some button pushing.
+Currently it filters out projects with a deadline beyond 1-1-2017.
+~Zac Bullard
+'''
 
 end_2013 = 1388534400
 end_2014 = 1420070400
 end_2015 = 1451606400
 end_2016 = 1483228800
 
-#WHY HAVEN'T I RECIEVED
-#My units arrived
-#Thanks for the download link
-#I never received my
-#work fine
-#  lucky ones that received my
-#I actually got shipped
-# I've had mine since I can't even remember when
-
 print("Starting program...")
 
-#csv files are 4150 lines long.
+#csv files with our general Kickstarter data, files are 4150 lines long.
 #path = './Kickstarter_2017-01-15' #Scrape of all kickstarters up to end of 2016
-path = './Kickstarter_2017-01-15/Kickstarter.csv' #Scrape of single file, for testing.
-#path = './small.csv' #Scrape of single file, for testing.
+#path = './Kickstarter_2017-01-15/Kickstarter.csv' #Scrape of single file, for testing.
+path = './small.csv' #Scrape of single file, for testing.
 
-#Gather and load all scv files from a given directory into our Kickstarter Data Frame.
+#Gather and load all csv files from a given directory into our Kickstarter Data Frame.
 def load_all_csv(path):
     all_files = glob.glob(path + '/*.csv')
     ksdf = pd.DataFrame()
@@ -51,14 +51,37 @@ def load_a_csv(path):
     ksdf = ksdf.loc[ksdf.name.notnull()]
     return ksdf
 
+      
+def scrape_all_comments(df):
+    #Need to get url from string
+    url_regex = re.compile('(?<={\"web\":{\"project\":\")(.*?)(?=\?)')
+    
+    #cdf = pd.DataFrame(columns = ['id','reward_date','comment_dates','comments']) #Comment dataframe
+    clst = []    
+
+    for index, row in df.iterrows():
+
+        project_url_raw =  row['urls']
+        project_url = url_regex.search(project_url_raw).group(0)
+    
+        comment_dates = []
+        comments = []
+        print(len(clst),'Started scraping:',row.id)
+        #Watch out, if the project has multiple reward dates will return the first one.
+        reward_date = scrape_project_comments(comment_dates,comments,project_url)
+    
+        #If the project doesn't return a valid return date, then we are not interested.
+        if reward_date is '':
+            continue
+        
+        clst.append([row.id,reward_date,comment_dates,comments])
+        
+    #return cdf
+    return clst
 
 #Dates and comments are lists that are passed by value, and updated within.
-def scrape_comments(dates,comments,project_url):
+def scrape_project_comments(dates,comments,project_url):
      
-    ##soup = BeautifulSoup(driver.page_source, "lxml")
-
-    ##comments_count = int(soup.find(attrs = {'data-content': "comments"})['data-comments-count'])
-
     #Didn't need the following line in Python3
     r = 0
     try:
@@ -89,7 +112,7 @@ def scrape_comments(dates,comments,project_url):
     
         soup = BeautifulSoup(r.content, "lxml")
 
-        find_delivered(soup,dates,comments)
+        scrape_page_comments(soup,dates,comments)
 
         link = soup.find('a',class_="btn btn--light-blue btn--block mt3 older_comments")
         if link is None:
@@ -100,7 +123,7 @@ def scrape_comments(dates,comments,project_url):
     return reward_date
 
 #Dates and comments are lists that are passed by value, and updated within.
-def find_delivered(soup,dates,comments):
+def scrape_page_comments(soup,dates,comments):
 
     for t in soup.findAll(class_ = "main clearfix pl3 ml3"):
         comment = str(t.findAll('p'))
@@ -111,97 +134,25 @@ def find_delivered(soup,dates,comments):
         date_raw = str(t.find(attrs = {'itemprop': "Comment[created_at]"})['data-value'])
         date = date_raw[1:11]
         dates.append(date)
-  
-def scrape_all_comments(df):
-    #Need to get url from string
-    url_regex = re.compile('(?<={\"web\":{\"project\":\")(.*?)(?=\?)')
-    
-    #cdf = pd.DataFrame(columns = ['id','reward_date','comment_dates','comments']) #Comment dataframe
-    clst = []    
-
-    for index, row in df.iterrows():
-
-        project_url_raw =  row['urls']
-        project_url = url_regex.search(project_url_raw).group(0)
-    
-        comment_dates = []
-        comments = []
-        print(len(clst),'Started scraping:',row.id)
-        reward_date = scrape_comments(comment_dates,comments,project_url)
-    
-        #If the project doesn't return a valid return date, then we are not interested.
-        if reward_date is '':
-            continue
         
-        #cdf = cdf.append({'id':row.id,'reward_date':reward_date,'comment_dates':comment_dates,'comments':comments}, ignore_index=True)
-        clst.append([row.id,reward_date,comment_dates,comments])
-        
-    #return cdf
-    return clst
-        
-
 if __name__ == '__main__':
+    #Kickstarter dataframe with basic information from webrobots.io
     ksdf = load_a_csv(path)
     #ksdf = ksdf[ksdf.id == 1630512510] #This line is for if you want to scrape a specific page
-    #ksdf = ksdf[ksdf.id == 1320115942] #This line is for if you want to scrape a specific page
+    
     #Only want to scrape projects that will deliver before 2017.
     #We need further data processing to figure out reward dates, but use deadline for now.
-    ksdf = ksdf[ksdf.deadline <= end_2016]
-    ksdf = ksdf[ksdf.usd_pledged > 100000]
+    #ksdf = ksdf[ksdf.usd_pledged > 100000] #For testing purposes
+    ksdf = ksdf[ksdf.deadline <= end_2016].reset_index(drop=True)
+    
     
     all_comment_dates = []
     all_comments = []
     all_reward_dates = []
     
-    #cmdf = scrape_all_comments(ksdf)
+    #Comment dataframe.
     cmlst = scrape_all_comments(ksdf)
     cmdf = pd.DataFrame(cmlst,columns = ['id','reward_date','comment_dates','comments'])
     
     ksdf.to_pickle("all_kickstarters")
     cmdf.to_pickle("all_comments")
-
-
-#project_url = 'https://www.kickstarter.com/projects/weaponshop/elixer-unique-suspended-painting/comments'
-#project_url = 'https://www.kickstarter.com/projects/mcmatz/the-amanda-palmer-tarot/comments'
-#project_url = 'https://www.kickstarter.com/projects/teplin/big-canal'
-#project_url = 'https://www.kickstarter.com/projects/mcmatz/the-amanda-palmer-tarot'
-#reward_date = scrape_comments(dates,comments,delivered_regex,project_url)
-
-'''
-
-large_success = ksdf.loc[( 0 < ksdf.deadline) & (ksdf.deadline < end_2016) & (ksdf.pledged >= 0)]
-
-url_regex = re.compile('(?<={\"web\":{\"project\":\")(.*?)(?=\?)')
-#delivered_regex = re.compile("(?<!not\s)(?<!hasen't\s)(?<!haven't\s)(?<!ever\s)(?<!yet\s)(recieved|received|arrived)", re.IGNORECASE)
-
-all_comment_dates = []
-all_comments = []
-all_reward_dates = []
-for index, row in large_success.iterrows():
-
-    #print("ENTERING LOOP")
-    project_url_raw =  row['urls']
-    project_url = url_regex.search(project_url_raw).group(0)
-
-    comment_dates = []
-    comments = []
-    reward_date = scrape_comments(comment_dates,comments,project_url)
-
-    #print("AFTER REWARD DATE, BEFORE APPENDING")
-    all_comment_dates.append(comment_dates)
-    all_comments.append(comments)
-    all_reward_dates.append(reward_date)
-    #print("EXITING LOOP")
-
-se_d_d = pd.Series(all_comment_dates)
-se_c = pd.Series(all_comments)
-se_r_d = pd.Series(all_reward_dates)
-
-large_success['comment_dates'] = se_d_d.values
-large_success['comments'] = se_c.values
-large_success['reward_dates'] = se_r_d.values
-
-#large_success = large_success.loc[large_success.reward_dates < current_date]
-
-large_success.to_pickle("all_kickstarters")
-'''
