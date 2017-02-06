@@ -1,14 +1,18 @@
 import pandas as pd
-pd.options.mode.chained_assignment = None  # default='warn'
+pd.options.mode.chained_assignment = None  # default='warn' #Supresses warning
 import glob as glob
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 import re
 from bs4 import BeautifulSoup
-import requests # <div class="main clearfix pl3 ml3">
+import requests 
 import time
 import datetime
-#from lxml import etree
+import plotly.plotly as py
+from plotly.graph_objs import *
+import plotly.graph_objs as go
+import plotly.tools as tls
+import cufflinks as cf
 
 end_2013 = 1388534400
 end_2014 = 1420070400
