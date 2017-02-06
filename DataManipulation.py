@@ -3,6 +3,7 @@ pd.options.mode.chained_assignment = None  # default='warn' #Supresses warning
 import glob as glob
 import scipy.stats as stats
 import matplotlib.pyplot as plt
+import numpy as np
 import re
 from bs4 import BeautifulSoup
 import requests 
@@ -13,6 +14,7 @@ from plotly.graph_objs import *
 import plotly.graph_objs as go
 import plotly.tools as tls
 import cufflinks as cf
+from operator import itemgetter
 
 end_2013 = 1388534400
 end_2014 = 1420070400
@@ -99,7 +101,42 @@ def plot_date_distribution(dates_se):
     #plt.xlabel('Date')
     #hp.savefig('comment_date.eps', figsize=(6,6),format='eps', dpi=1000)
     #plt.cla()
-       
+ 
+#plots funding level box plots on a per-category basis
+def plotly_catergory_boxes(df):
+    
+    dfsc = pd.concat([df.category,df.usd_pledged],axis = 1)
+    dfsc.rename(columns={2:'category'},inplace=True)
+    df_list = []
+    for category, group in dfsc.groupby('category'):      
+        df_list.append((group.usd_pledged.mean(),group.usd_pledged.rename(category)))
+    df_list.sort(key=lambda x: x[0],reverse = True)
+               
+    # generate an array of rainbow colors by fixing the saturation and lightness of the HSL representation of colour and marching around the hue. 
+    # Plotly accepts any CSS color format, see e.g. http://www.w3schools.com/cssref/css_colors_legal.asp.
+    c = ['hsl('+str(h)+',50%'+',50%)' for h in np.linspace(0, 360, len(df_list))]
+    
+    data = [{
+        'y':df_list[i][1],
+        'name':df_list[i][1].name ,
+        'type':'box',
+        'marker':{'color': c[i]}
+        } for i in range(len(df_list))]
+    
+    layout = go.Layout(
+        title='Successful Funds Raised Per Kickstarter Category',
+        xaxis=dict(
+            tickangle=60,
+            autorange=True
+        ),
+        yaxis=dict(
+            type='log',
+            title='USD Raised (log scale)',
+            autorange=True
+        ))
+    
+    fig = go.Figure(data=data, layout=layout)
+    py.plot(fig,filename='funding_boxcharts')        
 
 
 if __name__ == '__main__':
@@ -121,13 +158,14 @@ if __name__ == '__main__':
     cmdf['comment_count'] = cmdf.comments.map(lambda x: len(x))
     cmdf['comment_dates'] = [[time.mktime(datetime.datetime.strptime(date, "%Y-%m-%d").timetuple()) for date in dates] for dates in cmdf.comment_dates]
 
-    
     mdf = pd.merge(cmdf,ksdf, on='id',how = 'inner' )
     
     #Eliminate projects whose reward dates are after 2016 
     mdf = mdf[mdf.reward_date <= end_2016]
 
     print_basic_stats(mdf)
+
+    plotly_catergory_boxes(mdf[mdf.state == 'successful'])
     
     mdf = find_delays(mdf)
     
