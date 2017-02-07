@@ -1,4 +1,7 @@
 Whatmakesforgoodcrowdfunding.ipynb
 .ipynb_checkpoints
-all_kickstarters_full
-all_comments_full
+processed_dataframes/all_comments_full
+processed_dataframes/all_kickstarters_full
+processed_dataframes/confirmed_deliveries_comments
+processed_dataframes/50_plus_comments
+

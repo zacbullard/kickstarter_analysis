@@ -1,0 +1,44 @@
+Starting program...
+COMMENTS STATS:
+SUM: 8253699 
+ count    151246.000000
+mean         54.571354
+std        1527.058196
+min           0.000000
+25%           0.000000
+50%           0.000000
+75%           3.000000
+max      388909.000000
+Name: comment_count, dtype: float64
+SUCCESSFUL FUNDING RATIO 0.4344776060193327
+TOTAL FUNDS RAISED, MILLIONS 1637.461567125163
+FUNDED PROJECTS WITH OVER 50 COMMENTS FUNDING STATS
+count    8.040000e+02
+mean     5.963562e+05
+std      1.279947e+06
+min      1.014700e+04
+25%      1.194522e+05
+50%      2.505800e+05
+75%      5.764130e+05
+max      2.033899e+07
+Name: usd_pledged, dtype: float64
+FUNDED PROJECTS WITH CONFIRMED DELIVERIES FUNDING STATS:
+count    7.250000e+02
+mean     6.025439e+05
+std      1.314994e+06
+min      1.014700e+04
+25%      1.226320e+05
+50%      2.510890e+05
+75%      5.826340e+05
+max      2.033899e+07
+Name: usd_pledged, dtype: float64
+RATIO OF CONFIRMED DELIVERIES: 0.9017412935323383
+STATS ON CONFIRMED DELIVERY DELAYS (MONTHS) count    725.000000
+mean       6.037989
+std        6.633236
+min      -23.520313
+25%        2.463863
+50%        4.469174
+75%        8.477059
+max       50.461290
+Name: reward_delay, dtype: float64

@@ -94,8 +94,13 @@ def find_delays(df):
     print('RATIO OF CONFIRMED DELIVERIES:',len(df.index)/len(df50.index))
     print('STATS ON CONFIRMED DELIVERY DELAYS (MONTHS)',df.reward_delay.describe())
 
-    df50.to_pickle('50_plus_comments')
-    df.to_pickle('confirmed_deliveries')
+    df50[['id','delivered_comments','comments']].to_pickle('processed_dataframes/50_plus_comments')
+    df50.drop(['delivered_comments','comments'], axis=1,inplace=True)
+    df50.to_pickle('processed_dataframes/50_plus_df')
+        
+    df[['id','delivered_comments','comments']].to_pickle('processed_dataframes/confirmed_deliveries_comments')
+    df.drop(['delivered_comments','comments'], axis=1,inplace=True)
+    df.to_pickle('processed_dataframes/confirmed_deliveries_df')
     
     return df
 
@@ -149,7 +154,7 @@ def plotly_category_boxes(df):
         ))
     
     fig = go.Figure(data=data, layout=layout)
-    #py.plot(fig,filename='funding_boxcharts')  
+    py.plot(fig,filename='funding_boxcharts')  
     
 #plots single backer delay box plot
 def plotly_category_box(df):
@@ -178,8 +183,8 @@ if __name__ == '__main__':
     print("Starting program...")
 
     #Import dirty dataframes    
-    ksdf = pd.read_pickle("all_kickstarters_test")
-    cmdf = pd.read_pickle("all_comments_test")
+    ksdf = pd.read_pickle("processed_dataframes/all_kickstarters_full")
+    cmdf = pd.read_pickle("processed_dataframes/all_comments_full")
     
     #Let's clean up the basic info, while the data frame is relatively small
     ksdf = ksdf.drop(['slug','disable_communication','currency_trailing_code','currency_symbol','state_changed_at','profile','source_url','friends','created_at','is_starred','is_backing','permissions'],axis=1)

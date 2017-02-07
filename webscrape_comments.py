@@ -154,5 +154,5 @@ if __name__ == '__main__':
     cmlst = scrape_all_comments(ksdf)
     cmdf = pd.DataFrame(cmlst,columns = ['id','reward_date','comment_dates','comments'])
     
-    ksdf.to_pickle("all_kickstarters")
-    cmdf.to_pickle("all_comments")
+    ksdf.to_pickle("processed_dataframes/all_kickstarters")
+    cmdf.to_pickle("processed_dataframes/all_comments")
