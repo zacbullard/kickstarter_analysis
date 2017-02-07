@@ -94,6 +94,9 @@ def find_delays(df):
     print('RATIO OF CONFIRMED DELIVERIES:',len(df.index)/len(df50.index))
     print('STATS ON CONFIRMED DELIVERY DELAYS (MONTHS)',df.reward_delay.describe())
 
+    df50.to_pickle('50_plus_comments')
+    df.to_pickle('confirmed_deliveries')
+    
     return df
 
 #Input is a list of linux dates
@@ -113,7 +116,7 @@ def plot_date_distribution(dates_se):
     #plt.cla()
  
 #plots funding level box plots on a per-category basis
-def plotly_catergory_boxes(df):
+def plotly_category_boxes(df):
     
     dfsc = pd.concat([df.category,df.usd_pledged],axis = 1)
     dfsc.rename(columns={2:'category'},inplace=True)
@@ -146,8 +149,29 @@ def plotly_catergory_boxes(df):
         ))
     
     fig = go.Figure(data=data, layout=layout)
-    py.plot(fig,filename='funding_boxcharts')        
-
+    #py.plot(fig,filename='funding_boxcharts')  
+    
+#plots single backer delay box plot
+def plotly_category_box(df):
+ 
+    data = [{
+        'y':df.reward_delay,
+        'name' : ' ',
+        'type':'box',
+        #'marker' : {'color' : 'rgb(0, 128, 128)'},
+        } ]
+    
+    layout = go.Layout(
+        title='Confirmed Delivery Delays',
+        yaxis=dict(
+            title='Delay (Months)',
+            autorange=False
+        ))
+    
+    fig = go.Figure(data=data, layout=layout)
+    py.plot(fig,filename='delay_boxchart')
+    
+    
 
 if __name__ == '__main__':
     
@@ -175,6 +199,8 @@ if __name__ == '__main__':
 
     print_basic_stats(mdf)
 
-    #plotly_catergory_boxes(mdf[mdf.state == 'successful'])
+    #plotly_category_boxes(mdf[mdf.state == 'successful'])
     
     mdf = find_delays(mdf)
+    
+    #plotly_category_box(mdf)
