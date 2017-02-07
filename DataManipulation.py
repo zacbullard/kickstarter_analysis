@@ -29,7 +29,7 @@ end_2016 = 1483228800
 
 def print_basic_stats(df):
     #print('TOTAL # OF PROJECTS',len(df.index))
-    print('COMMENTS STATS:\n',df.comment_count.describe())
+    print('COMMENTS STATS:\nSUM:',df.comment_count.sum(),'\n',df.comment_count.describe())
     print('SUCCESSFUL FUNDING RATIO',len(df[df.state == 'successful'].index)/len(df.index))
     print('TOTAL FUNDS RAISED, MILLIONS', df[df.state == 'successful'].usd_pledged.sum()/1000000.0)
     
@@ -61,11 +61,16 @@ def find_delays(df):
     #Only sampling kickstarters with at least a given number of samples. 
     #Scipy requires at least 20, but 50 is generally the minimum for normal_test.
     df = df[df.delivered_comment_count >= comment_cutoff]
+
+    df50 = df.copy()
+    #plot_date_distribution(df.delivered_dates.iloc[0])
     
+    #Only successful projects can possibly deliver
+    df50 = df50[df50.state == 'successful']
+    df = df[df.state == 'successful']
+
     #From scipy: This function tests the null hypothesis that a sample comes from a normal distribution. It is based on D’Agostino and Pearson’s [R292], [R293] test that combines skew and kurtosis to produce an omnibus test of normality. 
     df['norm_test_pvalue'] = df.delivered_dates.apply(lambda x:stats.normaltest(x)[1])
-    
-    #plot_date_distribution(df.delivered_dates.iloc[0])
     #If p > 0.05, not enough of a normal distribution for us.
     df = df[df.norm_test_pvalue <= 0.05]
  
@@ -82,7 +87,12 @@ def find_delays(df):
         reward_delays.append(delivery_gap)
     df['reward_delay'] = reward_delays
 
-    print('TOTAL NUMBER OF ACCEPTED PROJECTS:',len(df.index))
+    print('FUNDED PROJECTS WITH OVER 50 COMMENTS FUNDING STATS')
+    print(df50.usd_pledged.describe())
+    print('FUNDED PROJECTS WITH CONFIRMED DELIVERIES FUNDING STATS:')
+    print(df.usd_pledged.describe())
+    print('RATIO OF CONFIRMED DELIVERIES:',len(df.index)/len(df50.index))
+    print('STATS ON CONFIRMED DELIVERY DELAYS (MONTHS)',df.reward_delay.describe())
 
     return df
 
@@ -165,12 +175,6 @@ if __name__ == '__main__':
 
     print_basic_stats(mdf)
 
-    plotly_catergory_boxes(mdf[mdf.state == 'successful'])
+    #plotly_catergory_boxes(mdf[mdf.state == 'successful'])
     
     mdf = find_delays(mdf)
-    
-    
-
-    
-    
-    
